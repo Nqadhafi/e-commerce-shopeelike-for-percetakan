@@ -28,4 +28,8 @@ class Product extends Model
         return $this->belongsToMany(Addon::class, 'product_addons', 'product_id', 'addon_id')
             ->withPivot(['is_default','is_required','constraints_json'])->withTimestamps();
     }
+    public function variantMatrix(){
+    return $this->hasMany(ProductVariantMatrix::class);
+}
+
 }
