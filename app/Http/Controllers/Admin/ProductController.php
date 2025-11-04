@@ -169,14 +169,99 @@ public function store(Request $r) {
 
 
 
-    public function edit(Product $product) {
-        $product->load(['categories','tags','variants.options']);
-        return inertia('Admin/Products/Edit', [
-            'item' => $product,
-            'categories' => Category::orderBy('name')->get(['id','name','slug']),
-            'tags' => Tag::orderBy('name')->get(['id','name','slug']),
-        ]);
+// UBAH edit(): kirim addons aktif juga
+public function edit(Product $product) {
+    $product->load(['categories','tags','variants.options','variantMatrix']);
+    return inertia('Admin/Products/Edit', [
+        'item' => $product,
+        'categories' => Category::orderBy('name')->get(['id','name','slug']),
+        'tags' => Tag::orderBy('name')->get(['id','name','slug']),
+        'addons' => \App\Models\Addon::where('is_active',1)->orderBy('label')->get(['id','code','label','type','billing_basis','amount']),
+    ]);
+}
+
+// NEW: sinkronisasi ulang matrix (update/hapus/tambah) dari Edit page
+public function matrixSync(Request $r, Product $product) {
+    $data = $r->validate([
+        'rows' => ['required','array'],
+        'rows.*.v1_option_id' => ['required','integer','exists:product_variant_options,id'],
+        'rows.*.v2_option_id' => ['nullable','integer','exists:product_variant_options,id'],
+        'rows.*.unit_price'   => ['required','numeric','min:0'],
+        'rows.*.image'        => ['nullable','file','mimes:jpg,jpeg,png,webp','max:4096'],
+    ]);
+
+    // bangun key unik untuk dedup
+    $key = fn($v1,$v2) => $v1.'|'.($v2 ?? 'null');
+
+    // map existing
+    $existing = $product->variantMatrix()->get()->keyBy(function($m) use($key){ return $key($m->variant1_option_id,$m->variant2_option_id); });
+
+    foreach (($data['rows'] ?? []) as $i => $row) {
+        $k = $key($row['v1_option_id'], $row['v2_option_id'] ?? null);
+        $imagePath = null;
+        if ($r->hasFile("rows.$i.image")) {
+            $imagePath = $r->file("rows.$i.image")->store('variant-matrix','public');
+        }
+        if (isset($existing[$k])) {
+            $payload = ['unit_price'=>$row['unit_price']];
+            if ($imagePath) $payload['image_path'] = $imagePath;
+            $existing[$k]->update($payload);
+            unset($existing[$k]);
+        } else {
+            $product->variantMatrix()->create([
+                'variant1_option_id' => $row['v1_option_id'],
+                'variant2_option_id' => $row['v2_option_id'] ?? null,
+                'unit_price' => $row['unit_price'],
+                'image_path' => $imagePath,
+            ]);
+        }
     }
+    // sisanya dihapus (opsional – comment jika tidak ingin auto-delete)
+    foreach ($existing as $left) { $left->delete(); }
+
+    return back();
+}
+
+// NEW: quick price preview (qty + addons)
+public function pricePreview(Request $r, Product $product) {
+    $data = $r->validate([
+        'qty' => ['required','integer','min:1'],
+        'v1_option_id' => ['nullable','integer','exists:product_variant_options,id'],
+        'v2_option_id' => ['nullable','integer','exists:product_variant_options,id'],
+        'addon_ids'    => ['sometimes','array'],
+        'addon_ids.*'  => ['integer','exists:addons_catalog,id'],
+    ]);
+
+    $base = null;
+    if ($product->has_variants) {
+        $row = $product->variantMatrix()
+            ->when($data['v1_option_id'] ?? null, fn($q,$v)=>$q->where('variant1_option_id',$v))
+            ->when($data['v2_option_id'] ?? null, fn($q,$v)=>$q->where('variant2_option_id',$v))
+            ->first();
+        if (!$row) return response()->json(['ok'=>false,'message'=>'Kombinasi tidak ditemukan'], 422);
+        $base = (float)$row->unit_price;
+    } else {
+        $base = (float)($product->default_unit_price ?? 0);
+    }
+
+    $addons = \App\Models\Addon::whereIn('id', $data['addon_ids'] ?? [])->get();
+    $addonTotal = 0.0;
+    foreach ($addons as $ad) {
+        if ($ad->billing_basis === 'per_unit') $addonTotal += (float)$ad->amount * $data['qty'];
+        else $addonTotal += (float)$ad->amount;
+    }
+
+    $subtotal = $base * $data['qty'] + $addonTotal;
+
+    return response()->json([
+        'ok'=>true,
+        'unit_price'=>$base,
+        'qty'=>$data['qty'],
+        'addons_total'=>$addonTotal,
+        'total'=>$subtotal,
+    ]);
+}
+
 
     public function update(Request $r, Product $product) {
         $data = $r->validate([
