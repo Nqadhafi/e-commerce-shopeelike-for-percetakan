@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use App\Http\Controllers\Admin\{CategoryController, TagController, ProductController, VariantController, VariantOptionController, AddonController, ProductAddonController};
 use App\Http\Controllers\CartController;
+use App\Http\Controllers\HomeController;
 
 /*
 |--------------------------------------------------------------------------
@@ -17,14 +18,17 @@ use App\Http\Controllers\CartController;
 |
 */
 
-Route::get('/', function () {
-    return Inertia::render('Welcome', [
-        'canLogin' => Route::has('login'),
-        'canRegister' => Route::has('register'),
-        'laravelVersion' => Application::VERSION,
-        'phpVersion' => PHP_VERSION,
-    ]);
-});
+// Route::get('/', function () {
+//     return Inertia::render('Welcome', [
+//         'canLogin' => Route::has('login'),
+//         'canRegister' => Route::has('register'),
+//         'laravelVersion' => Application::VERSION,
+//         'phpVersion' => PHP_VERSION,
+//     ]);
+// });
+
+
+Route::get('/', [HomeController::class, 'index'])->name('home');
 
 Route::middleware(['web'])->prefix('cart')->group(function () {
     Route::get('/',            [CartController::class, 'show'])->name('cart.show');         // GET JSON cart
@@ -35,7 +39,12 @@ Route::middleware(['web'])->prefix('cart')->group(function () {
 });
 
 Route::middleware(['auth', 'verified', 'role:admin,catalog'])->prefix('admin')->name('admin.')->group(function () {
-    Route::resource('categories', CategoryController::class)->except(['show']);
+
+    Route::get('categories', [CategoryController::class,'index'])->name('categories.index');
+    Route::post('categories', [CategoryController::class,'store'])->name('categories.store');
+    Route::put('categories/{category}', [CategoryController::class,'update'])->name('categories.update');
+    Route::patch('categories/{category}/toggle', [CategoryController::class,'toggle'])->name('categories.toggle');
+    Route::delete('categories/{category}', [CategoryController::class,'destroy'])->name('categories.destroy');
     Route::resource('tags', TagController::class)->except(['show']);
 
     Route::resource('addons', AddonController::class)->except(['show']);
