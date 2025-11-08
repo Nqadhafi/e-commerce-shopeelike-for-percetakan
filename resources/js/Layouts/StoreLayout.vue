@@ -1,29 +1,25 @@
-<script setup>
-import { Head, usePage } from '@inertiajs/vue3'
-import { onMounted, onUpdated } from 'vue'
-import HeaderNav from '@/Components/Store/HeaderNav.vue'
-import FooterSection from '@/Components/Store/FooterSection.vue'
 
-const page = usePage()
-const cartCount = page.props.cart?.items_count ?? 0
-const isLoggedIn = !!page.props.auth?.user
+<script setup >
+import { onMounted } from 'vue'
 
-const initIcons = () => { if (window.lucide?.createIcons) window.lucide.createIcons() }
-onMounted(initIcons)
-onUpdated(initIcons);
+onMounted(() => {
+  if (window.lucide) lucide.createIcons()
+})
+import HeaderNavbar from '@/Components/Store/HeaderNavbar.vue'
+import FooterStore from '@/Components/Store/FooterStore.vue'
 </script>
 
 <template>
+  <div class="min-h-screen flex flex-col bg-white text-gray-900">
+    <!-- Header -->
+    <HeaderNavbar />
 
-  <div class="min-h-screen bg-gray-50 font-sans">
-    <HeaderNav :cart-count="cartCount" :is-logged-in="isLoggedIn" />
-    <main>
+    <!-- Page Content -->
+    <main class="flex-1">
       <slot />
     </main>
-    <FooterSection />
+
+    <!-- Footer -->
+    <FooterStore />
   </div>
 </template>
-
-<style scoped>
-:global(html){ font-family:'Inter',ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial; }
-</style>

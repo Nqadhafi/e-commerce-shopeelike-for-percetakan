@@ -3,8 +3,20 @@ import { defineOptions, ref } from 'vue'
 import StoreLayout from '@/Layouts/StoreLayout.vue'
 import SectionJumbotron from '@/Components/Store/SectionJumbotron.vue'
 
+// receive `categories` from the server (Inertia)
+const { categories = [] } = defineProps({
+  categories: { type: Array, default: () => [] },
+})
+
 defineOptions({ layout: StoreLayout })
-const tab = ref('unggulan');
+
+const activeTab = ref(
+  categories && categories.length > 0
+    ? categories[0].slug
+    : null
+)
+console.log({ categories })
+
 </script>
 
 <template>
@@ -59,80 +71,38 @@ const tab = ref('unggulan');
     <div class="container mx-auto px-4">
       <h2 class="text-3xl font-bold text-center text-gray-900 mb-4">Showcase Produk</h2>
 
-      <div class="flex justify-center border-b border-gray-200 mb-8">
-        <button @click="tab='unggulan'"
-                :class="tab==='unggulan' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'"
-                class="px-6 py-3 text-sm font-medium border-b-2 transition-colors">Produk Unggulan</button>
-        <button @click="tab='terbaru'"
-                :class="tab==='terbaru' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'"
-                class="px-6 py-3 text-sm font-medium border-b-2 transition-colors">Produk Terbaru</button>
-        <button @click="tab='terlaris'"
-                :class="tab==='terlaris' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'"
-                class="px-6 py-3 text-sm font-medium border-b-2 transition-colors">Produk Terlaris</button>
-      </div>
+<div class="flex justify-center border-b border-gray-200 mb-8">
+  <button v-for="cat in categories"
+          :key="cat.id"
+          @click="activeTab = cat.slug"
+          :class="activeTab === cat.slug ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'"
+          class="px-6 py-3 text-sm font-medium border-b-2 transition-colors">
+    {{ cat.name }}
+  </button>
+</div>
 
-      <!-- Panel Unggulan -->
-      <div v-show="tab==='unggulan'" class="h-[300px] md:h-[500px] grid grid-cols-4 grid-rows-2 gap-4">
-        <a href="#" class="col-span-2 row-span-2 relative overflow-hidden group">
-          <img src="https://placehold.co/600x600/E2E8F0/94A3B8?text=Produk+Unggulan+1" class="collage-img">
-          <div class="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all flex items-end p-4">
-            <h3 class="text-white text-lg font-semibold opacity-0 group-hover:opacity-100 transition-opacity">Nama Produk 1</h3>
-          </div>
-        </a>
-        <a href="#" class="col-span-1 row-span-1 relative overflow-hidden group">
-          <img src="https://placehold.co/300x300/E2E8F0/94A3B8?text=Produk+2" class="collage-img">
-          <div class="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all flex items-end p-2">
-            <h3 class="text-white text-sm font-semibold opacity-0 group-hover:opacity-100 transition-opacity">Produk 2</h3>
-          </div>
-        </a>
-        <a href="#" class="col-span-1 row-span-1 relative overflow-hidden group">
-          <img src="https://placehold.co/300x300/E2E8F0/94A3B8?text=Produk+3" class="collage-img">
-          <div class="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all flex items-end p-2">
-            <h3 class="text-white text-sm font-semibold opacity-0 group-hover:opacity-100 transition-opacity">Produk 3</h3>
-          </div>
-        </a>
-        <a href="#" class="col-span-1 row-span-1 relative overflow-hidden group">
-          <img src="https://placehold.co/300x300/E2E8F0/94A3B8?text=Produk+4" class="collage-img">
-          <div class="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all flex items-end p-2">
-            <h3 class="text-white text-sm font-semibold opacity-0 group-hover:opacity-100 transition-opacity">Produk 4</h3>
-          </div>
-        </a>
-        <a href="#" class="col-span-1 row-span-1 relative overflow-hidden group">
-          <img src="https://placehold.co/300x300/E2E8F0/94A3B8?text=Produk+5" class="collage-img">
-          <div class="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all flex items-end p-2">
-            <h3 class="text-white text-sm font-semibold opacity-0 group-hover:opacity-100 transition-opacity">Produk 5</h3>
-          </div>
-        </a>
-      </div>
 
-      <!-- Panel Terbaru -->
-      <div v-show="tab==='terbaru'" class="h-[300px] md:h-[500px] grid grid-cols-4 grid-rows-2 gap-4">
-        <a href="#" class="col-span-1 row-span-1 relative overflow-hidden group">
-          <img src="https://placehold.co/300x300/D1FAE5/10B981?text=Produk+Baru+1" class="collage-img">
-        </a>
-        <a href="#" class="col-span-2 row-span-2 relative overflow-hidden group">
-          <img src="https://placehold.co/600x600/D1FAE5/10B981?text=Produk+Baru+2" class="collage-img">
-        </a>
-        <a href="#" class="col-span-1 row-span-1 relative overflow-hidden group">
-          <img src="https://placehold.co/300x300/D1FAE5/10B981?text=Produk+Baru+3" class="collage-img">
-        </a>
-        <a href="#" class="col-span-1 row-span-1 relative overflow-hidden group">
-          <img src="https://placehold.co/300x300/D1FAE5/10B981?text=Produk+Baru+4" class="collage-img">
-        </a>
-        <a href="#" class="col-span-1 row-span-1 relative overflow-hidden group">
-          <img src="https://placehold.co/300x300/D1FAE5/10B981?text=Produk+Baru+5" class="collage-img">
-        </a>
+<div v-for="cat in categories" v-show="activeTab === cat.slug" :key="cat.id">
+  <div class="h-[300px] md:h-[500px] grid grid-cols-4 grid-rows-2 gap-4 mb-4">
+    <a v-for="(p, i) in cat.products" :key="p.id" :href="`/products/${p.slug}`"
+       :class="i === 0 ? 'col-span-2 row-span-2' : 'col-span-1 row-span-1'"
+       class="relative overflow-hidden group">
+      <img :src="p.thumbnail_url" class="collage-img">
+      <div class="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all flex items-end p-2">
+        <h3 class="text-white text-sm font-semibold opacity-0 group-hover:opacity-100 transition-opacity">
+          {{ p.name }}
+        </h3>
       </div>
+    </a>
+  </div>
+  <div class="text-center mb-12">
+    <a :href="`/kategori/${cat.slug}`"
+       class="inline-block bg-blue-600 text-white font-semibold py-3 px-8 rounded-lg hover:bg-blue-700 transition-colors">
+      Lihat Semua Produk
+    </a>
+  </div>
+</div>
 
-      <div v-show="tab==='terlaris'">
-        <p class="text-center text-gray-500">Konten produk terlaris akan tampil di sini...</p>
-      </div>
-
-      <div class="text-center mt-12">
-        <a href="#" class="inline-block bg-blue-600 text-white font-semibold py-3 px-8 rounded-lg hover:bg-blue-700 transition-colors">
-          Lihat Selengkapnya
-        </a>
-      </div>
     </div>
   </section>
 
