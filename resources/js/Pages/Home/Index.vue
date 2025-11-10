@@ -2,10 +2,13 @@
 import { defineOptions, ref } from 'vue'
 import StoreLayout from '@/Layouts/StoreLayout.vue'
 import SectionJumbotron from '@/Components/Store/SectionJumbotron.vue'
+import SectionPromoBanners from '@/Components/Store/SectionPromoBanners.vue'
 
 // receive `categories` from the server (Inertia)
 const { categories = [] } = defineProps({
   categories: { type: Array, default: () => [] },
+   banners: Array,
+   promoBanners: Array,
 })
 
 defineOptions({ layout: StoreLayout })
@@ -14,13 +17,13 @@ const activeTab = ref(
   categories && categories.length > 0
     ? categories[0].slug
     : null
-)
-console.log({ categories })
+);
+
 
 </script>
 
 <template>
-  <SectionJumbotron />
+  <SectionJumbotron :banners="banners"/>
 
   <!-- Cara Order -->
   <section class="py-16 bg-white">
@@ -107,7 +110,8 @@ console.log({ categories })
   </section>
 
   <!-- Banner 8:4 -->
-  <section class="py-16 bg-white">
+     <SectionPromoBanners :banners="promoBanners" />
+  <!-- <section class="py-16 bg-white">
     <div class="container mx-auto px-4 grid grid-cols-1 lg:grid-cols-12 gap-6">
       <div class="lg:col-span-8 h-64 rounded-lg bg-cover bg-center p-8 flex flex-col justify-end" style="background-image:url('https://placehold.co/900x400/1F2937/FFFFFF?text=Info+Promo+Besar')">
         <h3 class="text-3xl font-bold text-white mb-2">Diskon Akhir Tahun!</h3>
@@ -120,7 +124,7 @@ console.log({ categories })
         <a href="#" class="bg-white text-gray-900 font-semibold py-2 px-5 rounded-lg self-start hover:bg-gray-100">Daftar</a>
       </div>
     </div>
-  </section>
+  </section> -->
 
   <!-- Promo Bulan Ini (cards dummy) -->
   <section class="py-16 bg-gray-50">
